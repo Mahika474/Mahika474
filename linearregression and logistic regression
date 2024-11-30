@@ -1,0 +1,56 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import mean_squared_error, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+
+# Load the dataset
+file_path = 'Urine data for kidney stone.csv'
+urine_data = pd.read_csv(file_path)
+
+# Define features and target for regression and classification
+X = urine_data.drop(columns=["urea", "target"])  # Features for linear regression and classification
+y_regression = urine_data["urea"]               # Target for linear regression
+y_classification = urine_data["target"]         # Target for classification
+
+# Split the data for both tasks
+X_train_reg, X_test_reg, y_train_reg, y_test_reg = train_test_split(X, y_regression, test_size=0.2, random_state=42)
+X_train_clf, X_test_clf, y_train_clf, y_test_clf = train_test_split(X, y_classification, test_size=0.2, random_state=42)
+
+# Linear Regression
+lin_reg = LinearRegression()
+lin_reg.fit(X_train_reg, y_train_reg)
+y_pred_reg = lin_reg.predict(X_test_reg)
+mse = mean_squared_error(y_test_reg, y_pred_reg)
+
+# Plot actual vs predicted for Linear Regression
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test_reg, y_pred_reg, color="blue", alpha=0.6)
+plt.plot([y_test_reg.min(), y_test_reg.max()], [y_test_reg.min(), y_test_reg.max()], color="red", linestyle="--")
+plt.xlabel("Actual Urea Levels")
+plt.ylabel("Predicted Urea Levels")
+plt.title(f"Linear Regression: Actual vs Predicted (MSE={mse:.2f})")
+plt.show()
+
+# K-Nearest Neighbors Classification
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train_clf, y_train_clf)
+y_pred_knn = knn.predict(X_test_clf)
+knn_accuracy = accuracy_score(y_test_clf, y_pred_knn)
+
+# Logistic Regression
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train_clf, y_train_clf)
+y_pred_log_reg = log_reg.predict(X_test_clf)
+log_reg_accuracy = accuracy_score(y_test_clf, y_pred_log_reg)
+
+# Confusion Matrices for both classifiers
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+ConfusionMatrixDisplay.from_predictions(y_test_clf, y_pred_knn, ax=axes[0], cmap="Blues")
+axes[0].set_title(f"KNN Confusion Matrix (Accuracy={knn_accuracy:.2f})")
+
+ConfusionMatrixDisplay.from_predictions(y_test_clf, y_pred_log_reg, ax=axes[1], cmap="Greens")
+axes[1].set_title(f"Logistic Regression Confusion Matrix (Accuracy={log_reg_accuracy:.2f})")
+plt.show()
